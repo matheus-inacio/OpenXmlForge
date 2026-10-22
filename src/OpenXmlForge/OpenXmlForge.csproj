@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>OpenXmlForge</AssemblyName>
+    <RootNamespace>OpenXmlForge</RootNamespace>
+    
+    <!-- Package Identification -->
+    <PackageId>OpenXmlForge</PackageId>
+    <Version>1.0.0</Version>
+    <Title>OpenXmlForge</Title>
+    <Product>OpenXmlForge</Product>
+    <Authors>Matheus Medeiros</Authors>
+    <Company>Matheus Medeiros</Company>
+    <Copyright>Copyright (c) 2026 Matheus Medeiros</Copyright>
+
+    <!-- Package Details & Discoverability -->
+    <Description>
+      Modern, high-performance .NET 10+ Word (DOCX) template engine built on OpenXML with 
+      low memory allocation and streaming-first design.
+    </Description>
+    <PackageTags>word;docx;template;openxml;openxmlforge;forge;office</PackageTags>
+    <PackageProjectUrl>https://github.com/matheus-inacio/OpenXmlForge</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/matheus-inacio/OpenXmlForge</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Licensing & Documentation -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Compiler & IntelliSense Documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Source Link & Debugging Symbols -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenXmlForge.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include package README from repo root into NuGet package root -->
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

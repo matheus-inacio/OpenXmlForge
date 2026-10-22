@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OpenXmlForge/OpenXmlForge.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpenXmlForge.Tests/OpenXmlForge.Tests.csproj" />
+  </Folder>
+</Solution>
