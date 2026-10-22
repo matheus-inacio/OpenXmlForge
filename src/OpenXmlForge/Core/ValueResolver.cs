@@ -211,7 +211,7 @@ internal static class ValueResolver
 
                 return;
 
-            case IEnumerable enumerable when node is not string and not byte[] and not char[] and not Stream:
+            case IEnumerable enumerable and not string and not byte[] and not char[] and not Stream:
                 foreach (var item in enumerable)
                 {
                     CollectPictures(item, pictures);
@@ -307,6 +307,12 @@ internal static class ValueResolver
         while (!remainingPath.IsEmpty)
         {
             if (current is null)
+            {
+                value = null;
+                return true;
+            }
+
+            if (IsRowCollection(current))
             {
                 value = null;
                 return true;
