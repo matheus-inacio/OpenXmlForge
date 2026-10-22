@@ -144,7 +144,7 @@ jobs:
           name: nuget-packages
           path: ./artifacts
 
-      - name: Create release
+      - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
@@ -152,9 +152,17 @@ jobs:
         run: |
           PRERELEASE_FLAG=""
           if [[ "$VERSION" == *-* ]]; then PRERELEASE_FLAG="--prerelease"; fi
-          gh release create "$TAG" ./artifacts/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$TAG" \
-            --generate-notes \
-            --verify-tag \
-            $PRERELEASE_FLAG
+          
+          # If a release for this tag already exists (e.g. manually drafted with custom notes),
+          # don't fail: just attach the .nupkg and .snupkg binaries to it.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Attaching artifacts to it..."
+            gh release upload "$TAG" ./artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" ./artifacts/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" \
+              --generate-notes \
+              --verify-tag \
+              $PRERELEASE_FLAG
+          fi
