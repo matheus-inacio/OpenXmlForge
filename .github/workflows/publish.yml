@@ -38,7 +38,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -56,7 +56,7 @@ jobs:
           echo "Publishing version: $VERSION"
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -78,14 +78,14 @@ jobs:
           -p:Version=${{ steps.version.outputs.version }}
 
       - name: Generate build provenance attestation
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
 
       - name: Upload packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
           path: ./artifacts/*
@@ -105,13 +105,13 @@ jobs:
       id-token: write  # lets this job request a GitHub OIDC token for NuGet/login
     steps:
       - name: Download packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: nuget-packages
           path: ./artifacts
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -139,7 +139,7 @@ jobs:
       contents: write  # create the release and upload assets
     steps:
       - name: Download packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: nuget-packages
           path: ./artifacts
