@@ -113,12 +113,9 @@ public class MultipleTablesImageRepetitionTests
         Assert.Equal(OutsideParagraphExpectedText, p.InnerText.Trim());
 
         var imageParts = doc.MainDocumentPart!.ImageParts.ToList();
-        Assert.Equal(2, imageParts.Count);
-        foreach (var ip in imageParts)
-        {
-            using var s = ip.GetStream();
-            Assert.True(s.Length > 0, "Image part should not be empty");
-        }
+        var imagePart = Assert.Single(imageParts);
+        using var imageStream = imagePart.GetStream();
+        Assert.True(imageStream.Length > 0, "Image part should not be empty");
     }
 
     [Fact]
@@ -155,12 +152,9 @@ public class MultipleTablesImageRepetitionTests
         Assert.Equal(OutsideParagraphExpectedText, p.InnerText.Trim());
 
         var imageParts = doc.MainDocumentPart!.ImageParts.ToList();
-        Assert.Equal(2, imageParts.Count);
-        foreach (var ip in imageParts)
-        {
-            using var s = ip.GetStream();
-            Assert.True(s.Length > 0, "Image part should not be empty");
-        }
+        var imagePart = Assert.Single(imageParts);
+        using var imageStream = imagePart.GetStream();
+        Assert.True(imageStream.Length > 0, "Image part should not be empty");
     }
 
     [Fact]
@@ -263,12 +257,48 @@ public class MultipleTablesImageRepetitionTests
 
         using var outDoc = WordprocessingDocument.Open(result, false);
         var imageParts = outDoc.MainDocumentPart!.ImageParts.ToList();
-        Assert.Equal(2, imageParts.Count);
-        foreach (var ip in imageParts)
+        var imagePart = Assert.Single(imageParts);
+        using var imageStream = imagePart.GetStream();
+        Assert.True(imageStream.Length > 0);
+    }
+
+    [Fact]
+    public async Task SameNonSeekableImageInHeaderAndBody_ReusesPackagePart()
+    {
+        var template = new MemoryStream();
+        using (var doc = WordprocessingDocument.Create(template, WordprocessingDocumentType.Document, true))
         {
-            using var s = ip.GetStream();
-            Assert.True(s.Length > 0);
+            var mainPart = doc.AddMainDocumentPart();
+            var headerPart = mainPart.AddNewPart<HeaderPart>();
+            var headerPartId = mainPart.GetIdOfPart(headerPart);
+
+            headerPart.Header = new Header(new Paragraph(new Run(new Text("{{Image}}"))));
+            headerPart.Header.Save();
+
+            mainPart.Document = new Document(new Body(
+                new Paragraph(new Run(new Text("{{Image}}"))),
+                new SectionProperties(
+                    new HeaderReference { Id = headerPartId, Type = HeaderFooterValues.Default })));
+            mainPart.Document.Save();
         }
+
+        template.Position = 0;
+        var pngBytes = CreatePngBytes(100, 100);
+        var data = new { Image = new WordPicture(new NonSeekableMemoryStream(pngBytes), "png") };
+
+        await using var result = await WordForge.GenerateStreamAsync(template, data);
+
+        using var outDoc = WordprocessingDocument.Open(result, false);
+        var mainPartOutput = outDoc.MainDocumentPart!;
+        var headerPartOutput = Assert.Single(mainPartOutput.HeaderParts);
+        var bodyImagePart = Assert.Single(mainPartOutput.ImageParts);
+        var headerImagePart = Assert.Single(headerPartOutput.ImageParts);
+
+        Assert.Equal(bodyImagePart.Uri, headerImagePart.Uri);
+        Assert.Single(mainPartOutput.Document.Body!.Descendants<Drawing>());
+        Assert.Single(headerPartOutput.Header!.Descendants<Drawing>());
+        using var imageStream = bodyImagePart.GetStream();
+        Assert.Equal(pngBytes.Length, imageStream.Length);
     }
 
     private static MemoryStream CreateParagraphTemplate(string text)

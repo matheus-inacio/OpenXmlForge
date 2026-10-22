@@ -35,7 +35,6 @@ internal static partial class TemplateEngine
             foreach (var pic in pictures)
             {
                 var content = ImageContent.PrepareSync(pic);
-                content.EnsureReusableForMultipleOccurrences();
                 preparedImages[pic] = content;
             }
 
@@ -69,7 +68,6 @@ internal static partial class TemplateEngine
                 var prepareTasks = pictures.Select(async pic =>
                 {
                     var content = await ImageContent.PrepareAsync(pic, cancellationToken).ConfigureAwait(false);
-                    await content.EnsureReusableForMultipleOccurrencesAsync(cancellationToken).ConfigureAwait(false);
                     preparedImages[pic] = content;
                 });
 
@@ -99,7 +97,7 @@ internal static partial class TemplateEngine
 
         var context = new RenderContext(
             preparedImages,
-            new Dictionary<WordPicture, int>(ReferenceEqualityComparer.Instance));
+            new Dictionary<WordPicture, RenderedImage>(ReferenceEqualityComparer.Instance));
 
         foreach (var headerPart in mainPart.HeaderParts.ToArray())
         {
@@ -1221,17 +1219,51 @@ internal static partial class TemplateEngine
         var cyEmus = heightPx * WordPicture.EmusPerPixel;
 
         var partType = picture.GetImagePartType(content.DetectedFormat);
-        var (imagePart, relationshipId) = AddImagePartToContainer(partContainer, partType);
-
-        context.WriteCounts.TryGetValue(picture, out var writeCount);
-        content.WriteTo(imagePart, ref writeCount);
-        context.WriteCounts[picture] = writeCount;
+        var relationshipId = GetOrCreateImageRelationship(
+            partContainer,
+            partType,
+            picture,
+            content,
+            context);
 
         var drawing = picture.WrappingType == WordPictureWrappingType.Anchor
             ? OpenXmlElementBuilder.CreateAnchorPictureDrawing(relationshipId, cxEmus, cyEmus, picture)
             : OpenXmlElementBuilder.CreateInlinePictureDrawing(relationshipId, cxEmus, cyEmus, picture.Extension ?? string.Empty);
 
         run.Append(drawing);
+    }
+
+    private static string GetOrCreateImageRelationship(
+        OpenXmlPartContainer partContainer,
+        PartTypeInfo partType,
+        WordPicture picture,
+        ImageContent content,
+        RenderContext context)
+    {
+        if (!context.RenderedImages.TryGetValue(picture, out var renderedImage))
+        {
+            var (imagePart, relationshipId) = AddImagePartToContainer(partContainer, partType);
+            content.WriteTo(imagePart);
+
+            renderedImage = new RenderedImage(
+                imagePart,
+                new Dictionary<OpenXmlPartContainer, string>(ReferenceEqualityComparer.Instance)
+                {
+                    [partContainer] = relationshipId,
+                });
+            context.RenderedImages[picture] = renderedImage;
+            return relationshipId;
+        }
+
+        if (renderedImage.RelationshipIds.TryGetValue(partContainer, out var existingRelationshipId))
+        {
+            return existingRelationshipId;
+        }
+
+        partContainer.AddPart(renderedImage.Part);
+        var relationshipIdForContainer = partContainer.GetIdOfPart(renderedImage.Part);
+        renderedImage.RelationshipIds[partContainer] = relationshipIdForContainer;
+        return relationshipIdForContainer;
     }
 
     private static (long WidthPx, long HeightPx) ComputePictureDimensionsInPixels(
@@ -1346,7 +1378,11 @@ internal static partial class TemplateEngine
 
     private sealed record RowCollectionBinding(string Prefix, List<object?> Items);
 
+    private sealed record RenderedImage(
+        ImagePart Part,
+        Dictionary<OpenXmlPartContainer, string> RelationshipIds);
+
     private sealed record RenderContext(
         IReadOnlyDictionary<WordPicture, ImageContent> PreparedImages,
-        Dictionary<WordPicture, int> WriteCounts);
+        Dictionary<WordPicture, RenderedImage> RenderedImages);
 }

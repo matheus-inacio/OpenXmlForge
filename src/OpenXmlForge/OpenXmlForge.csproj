@@ -6,7 +6,7 @@
     
     <!-- Package Identification -->
     <PackageId>OpenXmlForge</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Title>OpenXmlForge</Title>
     <Product>OpenXmlForge</Product>
     <Authors>Matheus Medeiros</Authors>
@@ -46,7 +46,6 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>
