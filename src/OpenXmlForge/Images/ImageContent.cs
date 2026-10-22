@@ -1,3 +1,5 @@
+using DocumentFormat.OpenXml.Packaging;
+using Microsoft.IO;
 using OpenXmlForge.Models;
 
 namespace OpenXmlForge.Images;
@@ -9,10 +11,12 @@ internal sealed class ImageContent : IDisposable, IAsyncDisposable
 {
     private const int HeaderBufferSize = 64 * 1024;
 
+    private static readonly RecyclableMemoryStreamManager StreamManager = new();
+
     private readonly Stream? _stream;
     private readonly byte[]? _bytes;
     private readonly bool _ownsStream;
-    private MemoryStream? _reusableCopy;
+    private Stream? _reusableCopy;
 
     private ImageContent(
         Stream? stream,
@@ -118,7 +122,7 @@ internal sealed class ImageContent : IDisposable, IAsyncDisposable
         return new ImageContent(null, [], null, null, ownsStream: false);
     }
 
-    public void WriteTo(DocumentFormat.OpenXml.Packaging.ImagePart imagePart, ref int writeCount)
+    public void WriteTo(ImagePart imagePart, ref int writeCount)
     {
         writeCount++;
 
@@ -141,26 +145,56 @@ internal sealed class ImageContent : IDisposable, IAsyncDisposable
             return;
         }
 
-        if (writeCount == 1 && _reusableCopy is null)
-        {
-            imagePart.FeedData(_stream);
-            return;
-        }
-
         if (_reusableCopy is not null)
         {
             _reusableCopy.Position = 0;
             imagePart.FeedData(_reusableCopy);
+            return;
         }
+
+        imagePart.FeedData(_stream);
     }
 
     public void EnsureReusableForMultipleOccurrences()
     {
-        if (_stream is not null && !_stream.CanSeek && _reusableCopy is null)
+        if (_stream is not { CanSeek: false } || _reusableCopy is not null)
         {
-            _reusableCopy = new MemoryStream();
-            _stream.CopyTo(_reusableCopy);
-            _reusableCopy.Position = 0;
+            return;
+        }
+
+        var copy = StreamManager.GetStream();
+        try
+        {
+            _stream.CopyTo(copy);
+            copy.Position = 0;
+            _reusableCopy = copy;
+        }
+        catch
+        {
+            copy.Dispose();
+            throw;
+        }
+    }
+
+    public async ValueTask EnsureReusableForMultipleOccurrencesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (_stream is not { CanSeek: false } || _reusableCopy is not null)
+        {
+            return;
+        }
+
+        var copy = StreamManager.GetStream();
+        try
+        {
+            await _stream.CopyToAsync(copy, cancellationToken).ConfigureAwait(false);
+            copy.Position = 0;
+            _reusableCopy = copy;
+        }
+        catch
+        {
+            await copy.DisposeAsync().ConfigureAwait(false);
+            throw;
         }
     }
 

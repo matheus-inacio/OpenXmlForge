@@ -34,7 +34,9 @@ internal static partial class TemplateEngine
         {
             foreach (var pic in pictures)
             {
-                preparedImages[pic] = ImageContent.PrepareSync(pic);
+                var content = ImageContent.PrepareSync(pic);
+                content.EnsureReusableForMultipleOccurrences();
+                preparedImages[pic] = content;
             }
 
             ExecuteOnDocument(docx, data, preparedImages);
@@ -67,6 +69,7 @@ internal static partial class TemplateEngine
                 var prepareTasks = pictures.Select(async pic =>
                 {
                     var content = await ImageContent.PrepareAsync(pic, cancellationToken).ConfigureAwait(false);
+                    await content.EnsureReusableForMultipleOccurrencesAsync(cancellationToken).ConfigureAwait(false);
                     preparedImages[pic] = content;
                 });
 
@@ -1337,6 +1340,7 @@ internal static partial class TemplateEngine
         string s => s,
         DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
         DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+        _ when ValueResolver.IsRowCollection(value) => string.Empty,
         _ => value.ToString() ?? string.Empty,
     };
 
