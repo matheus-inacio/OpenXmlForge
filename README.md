@@ -1,14 +1,12 @@
 # OpenXmlForge
 
-[![NuGet](https://img.shields.io/nuget/v/OpenXmlForge.svg?style=flat-square&logo=nuget&label=NuGet)](https://www.nuget.org/packages/OpenXmlForge)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/OpenXmlForge.svg?style=flat-square&logo=nuget&label=Downloads)](https://www.nuget.org/packages/OpenXmlForge)
-[![.NET](https://img.shields.io/badge/.NET-10%2B-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+![CI](https://github.com/matheus-inacio/OpenXmlForge/workflows/CI/badge.svg)
+[![NuGet](https://img.shields.io/nuget/dt/OpenXmlForge.svg)](https://www.nuget.org/packages/OpenXmlForge)
+[![NuGet](https://img.shields.io/nuget/vpre/OpenXmlForge.svg)](https://www.nuget.org/packages/OpenXmlForge)
 
 **OpenXmlForge** is a modern, high-performance .NET Word (`.docx`) template engine built on top of `DocumentFormat.OpenXml`.
 
 Designed from the ground up for **modern .NET (.NET 10+)**, OpenXmlForge focuses on **low memory allocation, high throughput, and predictable resource usage** while keeping a clean, declarative `{{tag}}` template syntax.
-
----
 
 ## Installation
 
@@ -17,8 +15,6 @@ Install from [NuGet](https://www.nuget.org/packages/OpenXmlForge):
 ```bash
 dotnet add package OpenXmlForge
 ```
-
----
 
 ## Quick Start
 
@@ -83,8 +79,6 @@ Place collection tags (`{{Collection.Property}}`) inside a table row and OpenXml
 | :--- | :--- | :--- | :--- |
 | `{{Items.Sku}}` | `{{Items.Description}}` | `{{Items.Quantity}}` | `{{Currency}} {{Items.Price}}` |
 
----
-
 ### 3. Block & Inline Loops (`@foreach` / `{{foreach}}`)
 
 **Block `@foreach`** (repeats paragraphs and tables between `@foreach` and `@endforeach`):
@@ -117,8 +111,6 @@ var data = new Dictionary<string, object?>
 };
 ```
 
----
-
 ### 4. Conditional Blocks & Inline Statements (`@if` / `{{if}}`)
 
 Supports `==`, `!=`, `>`, `<`, `>=`, `<=` across numbers, `DateTime`, booleans, and strings.
@@ -134,8 +126,6 @@ Approved for Executive Discount
 ```text
 Status: {{if(IsActive == true) ACTIVE endif}}{{if(IsActive == false) INACTIVE endif}}
 ```
-
----
 
 ### 5. Images (`WordPicture`)
 
@@ -163,8 +153,6 @@ var data = new Dictionary<string, object?>
 };
 ```
 
----
-
 ### 6. Hyperlinks (`WordHyperLink`) & Colored Text (`WordColorText`)
 
 ```csharp
@@ -187,16 +175,12 @@ var data = new Dictionary<string, object?>
 };
 ```
 
----
-
 ## Building & Testing
 
 ```bash
 dotnet build OpenXmlForge.slnx
 dotnet test OpenXmlForge.slnx
 ```
-
----
 
 ## Why OpenXmlForge?
 
@@ -216,8 +200,6 @@ dotnet test OpenXmlForge.slnx
 - **Unlimited Dotted Variables & Multi-Collection Rows**: Freely mix any number of dotted scalar paths (`{{Order.Number}}`, `{{Customer.LegalName}}`, `{{Address.City}}`) and repeating collection bindings in the same table row.
 - **Vertical Merge (`<w:vMerge/>`) Row Grouping**: Automatically groups consecutive vertically merged rows and clones the entire group per collection item.
 - **Isolated Shape & TextBox Scopes**: Processes `<w:txbxContent>` shapes from innermost to outermost so multiline text and tags inside `mc:AlternateContent` (`Choice` / `Fallback`) never leak into outer paragraphs.
-
----
 
 ## Acknowledgments
 
