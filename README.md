@@ -1,8 +1,22 @@
 # OpenXmlForge
 
+[![NuGet](https://img.shields.io/nuget/v/OpenXmlForge.svg?style=flat-square&logo=nuget&label=NuGet)](https://www.nuget.org/packages/OpenXmlForge)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/OpenXmlForge.svg?style=flat-square&logo=nuget&label=Downloads)](https://www.nuget.org/packages/OpenXmlForge)
+[![.NET](https://img.shields.io/badge/.NET-10%2B-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+
 **OpenXmlForge** is a modern, high-performance .NET Word (`.docx`) template engine built on top of `DocumentFormat.OpenXml`.
 
 Designed from the ground up for **modern .NET (.NET 10+)**, OpenXmlForge focuses on **low memory allocation, high throughput, and predictable resource usage** while keeping a clean, declarative `{{tag}}` template syntax.
+
+---
+
+## Installation
+
+Install from [NuGet](https://www.nuget.org/packages/OpenXmlForge):
+
+```bash
+dotnet add package OpenXmlForge
+```
 
 ---
 
